@@ -1,67 +1,70 @@
-name: Build Hangman Game (Windows + Linux)
+name: Build Windows & Linux Versions
 
 on:
-  workflow_dispatch:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
 
-  # ============================
-  #   WINDOWS BUILD JOB
-  # ============================
+  # -------------------
+  # WINDOWS BUILD
+  # -------------------
   build-windows:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          pip install pillow pyinstaller
+          pip install pillow
+          pip install pyinstaller
 
-      - name: Build Windows EXE
-        run: |
-          pyinstaller --onefile --windowed main.py
+      - name: Build EXE
+        run: pyinstaller main.spec --clean
 
-      - name: Upload EXE
+      - name: Upload Windows EXE Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Hangman-Windows
-          path: dist/main.exe
+          path: dist/HangmanGame/*
 
-  # ============================
-  #   LINUX BUILD JOB
-  # ============================
+
+  # -------------------
+  # LINUX BUILD
+  # -------------------
   build-linux:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Install system deps (needed for Tkinter)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install Dependencies
+      - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pillow pyinstaller
+          pip install pillow
+          pip install pyinstaller
 
-      - name: Build Linux Binary
-        run: |
-          pyinstaller --onefile main.py
+      - name: Build Linux Executable
+        run: pyinstaller main.spec --clean
 
-      - name: Upload Linux Binary
+      - name: Upload Linux Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Hangman-Linux
-          path: dist/main
+          path: dist/HangmanGame/*
