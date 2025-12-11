@@ -1,13 +1,11 @@
-# main.spec — bundles all PNG, JSON, TXT files automatically
+# main.spec — bundles all PNG, JSON, TXT files in project root
 import os
-from PyInstaller.utils.hooks import collect_data_files
 
 project_root = os.path.dirname(os.path.abspath(__file__))
 
-# Collect all .png, .json, .txt from root
 datas = []
 for file in os.listdir(project_root):
-    if file.endswith((".png", ".json", ".txt")):
+    if file.lower().endswith((".png", ".json", ".txt")):
         datas.append((file, "."))
 
 block_cipher = None
@@ -15,8 +13,8 @@ block_cipher = None
 a = Analysis(
     ['main.py'],
     pathex=[project_root],
+    datas=datas,
     binaries=[],
-    datas=datas,   # include data files
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
@@ -32,9 +30,8 @@ exe = EXE(
     exclude_binaries=True,
     name='HangmanGame',
     debug=False,
-    bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     console=False
 )
 
@@ -44,6 +41,6 @@ coll = COLLECT(
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     name='HangmanGame'
 )
