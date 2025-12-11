@@ -1,70 +1,86 @@
-name: Build Windows & Linux Versions
+name: Build Hangman Game
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-
-  # -------------------
-  # WINDOWS BUILD
-  # -------------------
   build-windows:
+    name: Build Windows EXE
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Install Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
       - name: Install dependencies
         run: |
-          pip install pillow
-          pip install pyinstaller
+          pip install --upgrade pip
+          pip install pillow pyinstaller
 
-      - name: Build EXE
+      - name: Create spec file
+        run: |
+          echo "import os" > main.spec
+          echo "project_root = os.getcwd()" >> main.spec
+          echo "datas = []" >> main.spec
+          echo "for file in os.listdir(project_root):" >> main.spec
+          echo "    if file.lower().endswith((\".png\", \".json\", \".txt\")):" >> main.spec
+          echo "        datas.append((file, \".\"))" >> main.spec
+          echo "block_cipher = None" >> main.spec
+          echo "from PyInstaller.utils.hooks import copy_metadata" >> main.spec
+          echo "a = Analysis(['main.py'], pathex=[project_root], datas=datas, hiddenimports=['PIL._tkinter_finder'], binaries=[], hookspath=[], runtime_hooks=[], excludes=[])" >> main.spec
+          echo "pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)" >> main.spec
+          echo "exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='HangmanGame', debug=False, strip=False, upx=False, console=False)" >> main.spec
+          echo "coll = COLLECT(exe, a.binaries, a.zipfiles, a.datas, strip=False, upx=False, name='HangmanGame')" >> main.spec
+
+      - name: Build .exe
         run: pyinstaller main.spec --clean
 
-      - name: Upload Windows EXE Artifact
+      - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Hangman-Windows
-          path: dist/HangmanGame/*
+          name: HangmanGame-windows
+          path: dist/HangmanGame
 
-
-  # -------------------
-  # LINUX BUILD
-  # -------------------
   build-linux:
+    name: Build Linux Executable
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Install system deps (needed for Tkinter)
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-tk
+          sudo apt update
+          sudo apt install -y python3-tk python3-pip
+          pip install pillow pyinstaller
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install Python dependencies
+      - name: Create spec file
         run: |
-          pip install pillow
-          pip install pyinstaller
+          echo "import os" > main.spec
+          echo "project_root = os.getcwd()" >> main.spec
+          echo "datas = []" >> main.spec
+          echo "for file in os.listdir(project_root):" >> main.spec
+          echo "    if file.lower().endswith((\".png\", \".json\", \".txt\")):" >> main.spec
+          echo "        datas.append((file, \".\"))" >> main.spec
+          echo "block_cipher = None" >> main.spec
+          echo "a = Analysis(['main.py'], pathex=[project_root], datas=datas, hiddenimports=['PIL._tkinter_finder'], binaries=[], hookspath=[], runtime_hooks=[], excludes=[])" >> main.spec
+          echo "pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)" >> main.spec
+          echo "exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='HangmanGame', debug=False, strip=False, upx=False, console=False)" >> main.spec
+          echo "coll = COLLECT(exe, a.binaries, a.zipfiles, a.datas, strip=False, upx=False, name='HangmanGame')" >> main.spec
 
-      - name: Build Linux Executable
+      - name: Build Linux binary
         run: pyinstaller main.spec --clean
 
-      - name: Upload Linux Artifact
+      - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Hangman-Linux
-          path: dist/HangmanGame/*
+          name: HangmanGame-linux
+          path: dist/HangmanGame
