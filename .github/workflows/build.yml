@@ -1,86 +1,48 @@
-name: Build Hangman Game
+name: Build Executables
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
+
   build-windows:
     name: Build Windows EXE
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install pillow pyinstaller
+          pip install -r requirements.txt
+          pip install pyinstaller
 
       - name: Create spec file
         run: |
-          echo "import os" > main.spec
-          echo "project_root = os.getcwd()" >> main.spec
-          echo "datas = []" >> main.spec
-          echo "for file in os.listdir(project_root):" >> main.spec
-          echo "    if file.lower().endswith((\".png\", \".json\", \".txt\")):" >> main.spec
-          echo "        datas.append((file, \".\"))" >> main.spec
-          echo "block_cipher = None" >> main.spec
-          echo "from PyInstaller.utils.hooks import copy_metadata" >> main.spec
-          echo "a = Analysis(['main.py'], pathex=[project_root], datas=datas, hiddenimports=['PIL._tkinter_finder'], binaries=[], hookspath=[], runtime_hooks=[], excludes=[])" >> main.spec
-          echo "pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)" >> main.spec
-          echo "exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='HangmanGame', debug=False, strip=False, upx=False, console=False)" >> main.spec
-          echo "coll = COLLECT(exe, a.binaries, a.zipfiles, a.datas, strip=False, upx=False, name='HangmanGame')" >> main.spec
+          echo 'import os' > main.spec
+          echo 'project_root = os.getcwd()' >> main.spec
+          echo 'datas = []' >> main.spec
+          echo 'for file in os.listdir(project_root):' >> main.spec
+          echo '    if file.lower().endswith((".png", ".json", ".txt")):' >> main.spec
+          echo '        datas.append((file, "."))' >> main.spec
+          echo 'block_cipher = None' >> main.spec
+          echo 'a = Analysis(["main.py"], pathex=[project_root], datas=datas, hiddenimports=["PIL._tkinter_finder"], binaries=[], hookspath=[], runtime_hooks=[], excludes=[])' >> main.spec
+          echo 'pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)' >> main.spec
+          echo 'exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="HangmanGame", debug=False, strip=False, upx=False, console=False)' >> main.spec
+          echo 'coll = COLLECT(exe, a.binaries, a.zipfiles, a.datas, strip=False, upx=False, name="HangmanGame")' >> main.spec
 
-      - name: Build .exe
+      - name: Build Windows EXE
         run: pyinstaller main.spec --clean
 
-      - name: Upload EXE artifact
+      - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
         with:
           name: HangmanGame-windows
-          path: dist/HangmanGame
-
-  build-linux:
-    name: Build Linux Executable
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y python3-tk python3-pip
-          pip install pillow pyinstaller
-
-      - name: Create spec file
-        run: |
-          echo "import os" > main.spec
-          echo "project_root = os.getcwd()" >> main.spec
-          echo "datas = []" >> main.spec
-          echo "for file in os.listdir(project_root):" >> main.spec
-          echo "    if file.lower().endswith((\".png\", \".json\", \".txt\")):" >> main.spec
-          echo "        datas.append((file, \".\"))" >> main.spec
-          echo "block_cipher = None" >> main.spec
-          echo "a = Analysis(['main.py'], pathex=[project_root], datas=datas, hiddenimports=['PIL._tkinter_finder'], binaries=[], hookspath=[], runtime_hooks=[], excludes=[])" >> main.spec
-          echo "pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)" >> main.spec
-          echo "exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='HangmanGame', debug=False, strip=False, upx=False, console=False)" >> main.spec
-          echo "coll = COLLECT(exe, a.binaries, a.zipfiles, a.datas, strip=False, upx=False, name='HangmanGame')" >> main.spec
-
-      - name: Build Linux binary
-        run: pyinstaller main.spec --clean
-
-      - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: HangmanGame-linux
           path: dist/HangmanGame
